@@ -238,7 +238,7 @@ function renderAIInsights(container, state, actions) {
   });
 
   const maxVal = Math.max(30, ...rows.map(r => Math.min(60, r.daysLeft)));
-  const barW = 80, gap = 30, leftOffset = 60, topOffset = 20, chartH = 180;
+  const barW = 80, gap = 30, leftOffset = 60, topOffset = 40, chartH = 180;
   
   let bars = "";
   let labels = "";
@@ -261,11 +261,11 @@ function renderAIInsights(container, state, actions) {
   });
 
   chartWrapper.innerHTML = `
-    <svg viewBox="0 0 760 250" style="width:100%; height:auto;">
+    <svg viewBox="0 0 760 270" style="width:100%; height:auto;">
       <line x1="${leftOffset - 10}" y1="${topOffset + chartH}" x2="${leftOffset + rows.length * (barW + gap)}" y2="${topOffset + chartH}" stroke="#D8E3DE" stroke-width="1"/>
       ${bars}
       ${labels}
-      <text x="10" y="15" font-family="IBM Plex Mono" font-size="11" fill="#6B7C76">${activeMed.icon} ${activeMed.name} - projected depletion supply</text>
+      <text x="10" y="22" font-family="IBM Plex Mono" font-size="11" fill="#6B7C76">${activeMed.icon} ${activeMed.name} - projected depletion supply</text>
     </svg>
   `;
 
