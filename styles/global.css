@@ -498,3 +498,29 @@ tbody tr:hover { background: var(--gold-100); }
 .login-switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--muted); }
 .login-switch a { color: var(--teal-500); font-weight: 700; cursor: pointer; text-decoration: underline; }
 #app-root { display: none; }
+
+/* --- PowerPoint Graph spacing & Overlap fix --- */
+.chart-wrap {
+  margin-top: 24px;
+  padding: 28px 32px 32px; /* Added extra gap to avoid overlapping headings */
+}
+
+/* --- Bed footage & Doctor presence style enhancements --- */
+.visual-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--line);
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius-lg);
+}
+.visual-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lux);
+  border-color: var(--teal-500);
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.6; }
+}

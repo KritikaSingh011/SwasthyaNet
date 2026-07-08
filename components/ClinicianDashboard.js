@@ -169,15 +169,103 @@ export function renderClinicianDashboard(container, state, actions) {
           <p>${state.translate("pStatus")}</p>
         </div>
       </div>
-      <div class="card" style="padding:20px;">
-        <div class="form-grid">
-          <div class="form-field"><label>${state.translate("fBedsTotal")}</label><input id="fs-bedsTotal" type="number" value="${facility.bedsTotal}"></div>
-          <div class="form-field"><label>${state.translate("fBedsOcc")}</label><input id="fs-bedsOcc" type="number" value="${facility.bedsOcc}"></div>
-          <div class="form-field"><label>${state.translate("fDocSched")}</label><input id="fs-docSched" type="number" value="${facility.docSched}"></div>
-          <div class="form-field"><label>${state.translate("fDocPresent")}</label><input id="fs-docPresent" type="number" value="${facility.docPresent}"></div>
-          <div class="form-field"><label>${state.translate("fFootfall")}</label><input id="fs-footfall" type="number" value="${facility.footfall}"></div>
+      
+      <!-- Visual Dashboard Indicators -->
+      <div class="status-visual-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px; margin-bottom:28px;">
+        
+        <!-- Beds Occupancy Gauge -->
+        <div class="card visual-card" style="padding:24px; display:flex; align-items:center; gap:20px;">
+          <div class="progress-ring-wrap" style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; border-radius:50%; background: radial-gradient(closest-side, var(--cream) 79%, transparent 80% 100%), conic-gradient(var(--teal-500) ${(facility.bedsOcc / (facility.bedsTotal || 1)) * 100}%, var(--line) 0); flex:none;">
+            <span style="font-size:15px; font-weight:700; color:var(--teal-900); font-family:var(--font-mono);">${Math.round((facility.bedsOcc / (facility.bedsTotal || 1)) * 100)}%</span>
+          </div>
+          <div>
+            <h4 style="margin:0 0 4px; font-size:14px; font-weight:700; color:var(--ink);">${state.translate("fBedsOcc")}</h4>
+            <div style="font-size:24px; font-weight:800; color:var(--teal-900); font-family:var(--font-mono);">${facility.bedsOcc} / ${facility.bedsTotal}</div>
+            <span class="sub" style="font-size:12px; color:var(--muted);">${facility.bedsTotal - facility.bedsOcc} beds available</span>
+          </div>
         </div>
-        <button class="btn btn-primary" style="margin-top:14px;" id="btn-save-live-status">${state.translate("saveUpdate")}</button>
+
+        <!-- Doctor Presence Gauge -->
+        <div class="card visual-card" style="padding:24px; display:flex; align-items:center; gap:20px;">
+          <div class="progress-ring-wrap" style="position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; border-radius:50%; background: radial-gradient(closest-side, var(--cream) 79%, transparent 80% 100%), conic-gradient(var(--gold-500) ${(facility.docPresent / (facility.docSched || 1)) * 100}%, var(--line) 0); flex:none;">
+            <span style="font-size:15px; font-weight:700; color:var(--gold-500); font-family:var(--font-mono);">${Math.round((facility.docPresent / (facility.docSched || 1)) * 100)}%</span>
+          </div>
+          <div>
+            <h4 style="margin:0 0 4px; font-size:14px; font-weight:700; color:var(--ink);">${state.translate("fDocPresent")}</h4>
+            <div style="font-size:24px; font-weight:800; color:var(--gold-500); font-family:var(--font-mono);">${facility.docPresent} / ${facility.docSched}</div>
+            <span class="sub" style="font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:6px;">
+              <span style="width:8px; height:8px; background:var(--gold-500); border-radius:50%; display:inline-block; animation: pulse 1.5s infinite;"></span> Present Today
+            </span>
+          </div>
+        </div>
+
+        <!-- Footfall Tracker -->
+        <div class="card visual-card" style="padding:24px; display:flex; align-items:center; gap:20px; background: linear-gradient(135deg, var(--white), var(--gold-100) 240%);">
+          <div style="font-size:32px; padding:12px; background:var(--teal-100); border-radius:12px; display:flex; align-items:center; justify-content:center;">📈</div>
+          <div>
+            <h4 style="margin:0 0 4px; font-size:14px; color:var(--ink); font-weight:700;">${state.translate("fFootfall")}</h4>
+            <div style="font-size:28px; font-weight:800; color:var(--teal-900); font-family:var(--font-mono);">${facility.footfall}</div>
+            <span class="sub" style="font-size:12px; color:var(--teal-500);">Cumulative admissions</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Adjustment Form Card with Steppers -->
+      <div class="card" style="padding:24px;">
+        <h4 style="margin-top:0; margin-bottom:18px; font-weight:700; font-family:var(--font-display); color:var(--teal-900);">Quick Adjust Parameters</h4>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          
+          <!-- Beds steppers -->
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:14px; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:12px;">
+            <div><strong style="font-size:14px; color:var(--ink);">Emergency & Regular Beds</strong><div style="font-size:12px; color:var(--muted);">Configure live capacity and occupied limits</div></div>
+            <div style="display:flex; gap:18px; align-items:center; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; color:var(--muted); font-family:var(--font-mono);">TOTAL:</span>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-bedsTotal', -1)">-</button>
+                <input id="fs-bedsTotal" type="number" value="${facility.bedsTotal}" style="width:40px; text-align:center; border:none; background:transparent; font-weight:700; font-family:var(--font-mono); font-size:14px; outline:none;" readonly>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-bedsTotal', 1)">+</button>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; color:var(--muted); font-family:var(--font-mono);">OCCUPIED:</span>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-bedsOcc', -1)">-</button>
+                <input id="fs-bedsOcc" type="number" value="${facility.bedsOcc}" style="width:40px; text-align:center; border:none; background:transparent; font-weight:700; font-family:var(--font-mono); font-size:14px; outline:none;" readonly>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-bedsOcc', 1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctors steppers -->
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:14px; border-bottom:1px solid var(--line); flex-wrap:wrap; gap:12px;">
+            <div><strong style="font-size:14px; color:var(--ink);">On-duty Physicians</strong><div style="font-size:12px; color:var(--muted);">Total rostered vs active present today</div></div>
+            <div style="display:flex; gap:18px; align-items:center; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; color:var(--muted); font-family:var(--font-mono);">SCHEDULED:</span>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-docSched', -1)">-</button>
+                <input id="fs-docSched" type="number" value="${facility.docSched}" style="width:40px; text-align:center; border:none; background:transparent; font-weight:700; font-family:var(--font-mono); font-size:14px; outline:none;" readonly>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-docSched', 1)">+</button>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; color:var(--muted); font-family:var(--font-mono);">PRESENT:</span>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-docPresent', -1)">-</button>
+                <input id="fs-docPresent" type="number" value="${facility.docPresent}" style="width:40px; text-align:center; border:none; background:transparent; font-weight:700; font-family:var(--font-mono); font-size:14px; outline:none;" readonly>
+                <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-docPresent', 1)">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footfall steppers -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div><strong style="font-size:14px; color:var(--ink);">Outpatient Admissions</strong><div style="font-size:12px; color:var(--muted);">Adjust cumulative patient footfall count</div></div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-footfall', -5)">-5</button>
+              <input id="fs-footfall" type="number" value="${facility.footfall}" style="width:50px; text-align:center; border:none; background:transparent; font-weight:700; font-family:var(--font-mono); font-size:14px; outline:none;" readonly>
+              <button class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:13px;" onclick="adjustVal('fs-footfall', 5)">+5</button>
+            </div>
+          </div>
+
+        </div>
+        <button class="btn btn-primary" style="margin-top:24px; width:100%; padding:14px;" id="btn-save-live-status">${state.translate("saveUpdate")}</button>
       </div>
     </div>
 

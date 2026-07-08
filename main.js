@@ -757,7 +757,7 @@ window.attemptSignup = () => {
   reader.onload = async () => {
     try {
       const base64Data = reader.result;
-      const result = await scanAadhaarCard(base64Data, file.type);
+      const result = await scanAadhaarCard(base64Data, file.type, name);
       
       if (!result.isValid) {
         statusEl.innerHTML = `<div class='attend-status-line err'>❌ Invalid Aadhaar: ${result.error || "Please upload a valid Aadhaar card photo."}</div>`;
@@ -898,6 +898,14 @@ window.toggleCartDrawer = (open) => actions.toggleDrawer(open);
 window.openProfile = () => actions.openProfile();
 window.doLogout = () => actions.doLogout();
 window.saveProfile = () => actions.saveProfile();
+
+window.adjustVal = (id, delta) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.value = Math.max(0, Number(el.value) + delta);
+    el.dispatchEvent(new Event('input'));
+  }
+};
 
 // Bootstrap
 window.onload = () => {
