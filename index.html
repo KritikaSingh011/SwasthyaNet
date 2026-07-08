@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SwasthyaNet — District Health Center & Supply Chain Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/global.css">
+</head>
+<body>
+
+  <!-- Toast wrapper for system alerts -->
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <!-- ================= LOGIN GATE ================= -->
+  <div id="login-gate">
+    <div class="login-card">
+      <div class="login-brand">
+        <svg width="34" height="34" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="18" fill="#1B4B43"/>
+          <path d="M20 11v18M11 20h18" stroke="#FBFAF7" stroke-width="3.4" stroke-linecap="round"/>
+        </svg>
+        <div>
+          <div class="name">SwasthyaNet</div>
+          <div class="tag">Sign in to continue</div>
+        </div>
+      </div>
+
+      <div class="login-role-tabs" id="login-role-tabs">
+        <button class="active" data-role="patient" onclick="setLoginRole('patient')">🧑 Patient</button>
+        <button data-role="clinician" onclick="setLoginRole('clinician')">🩺 Doctor/Nurse</button>
+        <button data-role="admin" onclick="setLoginRole('admin')">🏛️ Admin</button>
+      </div>
+
+      <div class="login-error" id="login-error"></div>
+
+      <div id="login-form-fields">
+        <div class="login-field"><label>Username</label><input id="login-username" placeholder="e.g. asha or dr.priya"></div>
+        <div class="login-field"><label>Password</label><input id="login-password" type="password" placeholder="Your password"></div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="login-submit-btn" onclick="attemptLogin()">Log in</button>
+
+      <div class="login-hint" id="login-hint"></div>
+
+      <div class="login-switch" id="login-signup-switch">
+        New patient? <a onclick="showSignup()">Create a patient account</a>
+      </div>
+      <div class="login-switch" id="login-docsignup-switch" style="display:none;">
+        New doctor or nurse? <a onclick="showDoctorSignup()">Register &amp; verify your credentials</a>
+      </div>
+
+      <!-- Patient self sign-up -->
+      <div id="signup-fields" style="display:none; max-height:64vh; overflow-y:auto; padding-right:2px;">
+        <div class="login-field"><label>Full name</label><input id="signup-name" placeholder="e.g. Asha Verma"></div>
+        <div class="login-field"><label>Phone</label><input id="signup-phone" placeholder="e.g. 98XXXXXX21"></div>
+        <div class="login-field"><label>Choose a username</label><input id="signup-username" placeholder="e.g. asha"></div>
+        <div class="login-field"><label>Choose a password</label><input id="signup-password" type="password" placeholder="e.g. asha123"></div>
+        <div class="login-field">
+          <label>Aadhaar card photo (front side)</label>
+          <input id="signup-aadhaar" type="file" accept="image/*">
+          <div class="doc-upload-preview" id="signup-aadhaar-preview">
+            <span class="ph">Required — upload a clear photo of your Aadhaar card. We verify it automatically before your account is created.</span>
+          </div>
+          <div id="signup-aadhaar-status" style="display:none;"></div>
+        </div>
+        <button class="btn btn-primary btn-block" id="signup-submit-btn" onclick="attemptSignup()">Verify Aadhaar &amp; create account</button>
+        <div class="login-switch"><a onclick="hideSignup()">← Back to log in</a></div>
+      </div>
+
+      <!-- Doctor / Nurse self sign-up -->
+      <div id="doctor-signup-fields" style="display:none; max-height:64vh; overflow-y:auto; padding-right:2px;">
+        <div class="login-field">
+          <label>I am registering as</label>
+          <select id="ds-role"><option value="Doctor">Doctor</option><option value="Nurse">Nurse</option></select>
+        </div>
+        <div class="login-field"><label>Full name</label><input id="ds-name" placeholder="e.g. Dr. Kavita Rao"></div>
+        <div class="login-field"><label>Phone</label><input id="ds-phone" placeholder="e.g. 98XXXXXX11"></div>
+        <div class="login-field"><label>Choose a username</label><input id="ds-username" placeholder="e.g. dr.kavita"></div>
+        <div class="login-field"><label>Choose a password</label><input id="ds-password" type="password" placeholder="Choose password"></div>
+        <div class="login-field"><label>Facility applying to</label><select id="ds-facility"></select></div>
+        <div class="login-field"><label>Degree / qualification</label><input id="ds-degree" placeholder="e.g. MBBS, MD"></div>
+        <div class="login-field"><label>Specialty</label><input id="ds-specialty" placeholder="e.g. Cardiology"></div>
+        <div class="login-field"><label>Years of experience</label><input id="ds-experience" type="number" min="0" value="5"></div>
+
+        <div class="login-field">
+          <label>Government photo ID (Aadhaar / Medical ID)</label>
+          <input id="ds-govid" type="file" accept="image/*">
+          <div class="doc-upload-preview" id="ds-govid-preview"><span class="ph">Selfie or certificate photo of valid credentials.</span></div>
+        </div>
+
+        <div class="login-field">
+          <label>Your profile photo (clear face selfie)</label>
+          <input id="ds-selfie" type="file" accept="image/*">
+          <div class="doc-upload-preview round" id="ds-selfie-preview"><span class="ph">Profile selfie image.</span></div>
+        </div>
+
+        <div class="ai-disclaimer">Your documents are reviewed by the district admin before your account is activated.</div>
+        <button class="btn btn-primary btn-block" onclick="attemptDoctorSignup()">Submit for verification</button>
+        <div class="login-switch"><a onclick="hideSignup()">← Back to log in</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= APP ROOT ================= -->
+  <div id="app-root">
+    
+    <!-- Topbar Component Mount -->
+    <div id="topbar-mount" class="topbar"></div>
+
+    <!-- ================= PATIENT VIEW ================= -->
+    <div class="view" id="view-patient">
+      <div id="patient-view-mount"></div>
+    </div>
+
+    <!-- ================= CLINICIAN VIEW ================= -->
+    <div class="view" id="view-clinician">
+      <div id="clinician-view-mount"></div>
+    </div>
+
+    <!-- ================= DISTRICT ADMIN VIEW ================= -->
+    <div class="view" id="view-admin">
+      <div id="admin-view-mount"></div>
+    </div>
+
+    <!-- ================= FOOTER (shown on every page) ================= -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="name">SwasthyaNet</div>
+          <p>A single, calm place for district health — medicines, doctors, and records — built for patients, clinicians, and administrators across every PHC and CHC.</p>
+        </div>
+        <div class="footer-col">
+          <h5>Product</h5>
+          <ul>
+            <li><a>Pharmacy</a></li>
+            <li><a>Symptom Checker</a></li>
+            <li><a>Find a Doctor</a></li>
+            <li><a>Appointments</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>For providers</h5>
+          <ul>
+            <li><a>Inventory &amp; Requests</a></li>
+            <li><a>Patient Records</a></li>
+            <li><a>District Dashboard</a></li>
+            <li><a>Help &amp; Support</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Company</h5>
+          <ul>
+            <li><a>About us</a></li>
+            <li><a>Careers</a></li>
+            <li><a>Contact</a></li>
+            <li><a>Accessibility</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 SwasthyaNet. District Health &amp; Supply AI — modular build.</span>
+        <div class="legal-links">
+          <a>Privacy Policy</a>
+          <a>Terms of Service</a>
+          <a>Refund Policy</a>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /#app-root -->
+
+  <!-- ================= PROFILE DRAWER ================= -->
+  <div class="drawer-overlay" id="profile-overlay"></div>
+  <div class="drawer" id="profile-drawer">
+    <div class="drawer-head"><h3>My profile</h3><button class="btn btn-ghost btn-sm" onclick="document.getElementById('profile-drawer').classList.remove('open'); document.getElementById('profile-overlay').classList.remove('open');">Close</button></div>
+    <div class="drawer-body" style="padding: 20px;">
+      <div class="profile-head">
+        <div class="avatar-lg" id="profile-avatar">AV</div>
+        <div><h3 id="profile-name">Asha Verma</h3><div class="sub" id="profile-role">Patient</div></div>
+      </div>
+      <div class="addr-field"><label>Full name</label><input id="profile-name-input" value="Asha Verma"></div>
+      <div class="addr-field"><label>Phone</label><input id="profile-phone-input" value="98XXXXXX21"></div>
+      <div class="addr-field"><label>Username</label><input id="profile-username-input" value="asha" disabled></div>
+      <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="saveProfile()">Save profile</button>
+    </div>
+  </div>
+
+  <!-- ================= CART DRAWER ================= -->
+  <div class="drawer-overlay" id="drawer-overlay" onclick="toggleCartDrawer(false)"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-head"><h3 data-i18n="drawerTitle">Your cart</h3><button class="btn btn-ghost btn-sm" onclick="toggleCartDrawer(false)" data-i18n="close">Close</button></div>
+    <div class="drawer-body">
+      <div class="delivery-toggle">
+        <button id="opt-pickup" class="active" onclick="setDeliveryMode('pickup')" data-i18n="pickup">Pickup at facility</button>
+        <button id="opt-delivery" onclick="setDeliveryMode('delivery')" data-i18n="delivery">Home delivery</button>
+      </div>
+      <div id="address-fields" style="display:none;">
+        <div class="addr-field"><label data-i18n="fullName">Full name</label><input id="addr-name" value="Asha Verma"></div>
+        <div class="addr-field"><label data-i18n="phone">Phone</label><input id="addr-phone" value="98XXXXXX21"></div>
+        <div class="addr-field"><label data-i18n="address">Delivery address</label><textarea id="addr-line">12 Kabir Marg, Chinhat, Lucknow, UP</textarea></div>
+        <div class="addr-field"><label data-i18n="pincode">Pincode</label><input id="addr-pin" value="226028"></div>
+      </div>
+      <div id="drawer-items"></div>
+    </div>
+    <div class="drawer-foot">
+      <div class="total"><span data-i18n="estTotal">Estimated total</span> <b id="drawer-total">₹0</b></div>
+      <button class="btn btn-primary btn-block" onclick="submitOrder()" data-i18n="sendOrder">Place order</button>
+    </div>
+  </div>
+
+  <!-- Floating Cart Action Bar -->
+  <button class="cart-fab" id="cart-fab" style="display:none;" onclick="toggleCartDrawer(true)">
+    🛒 <span data-i18n="cartLabel">Cart</span> <span class="count" id="cart-count">0</span>
+  </button>
+
+  <button class="readaloud-fab" id="readaloud-fab">
+    🔊 <span id="readaloud-text">Stop reading</span>
+  </button>
+
+  <!-- ================= APPOINTMENT MODAL ================= -->
+  <div class="modal-overlay" id="appt-modal">
+    <div class="modal-card">
+      <h3 id="appt-modal-title">Book appointment</h3>
+      <div class="form-grid">
+        <div class="form-field full"><label>Doctor</label><input id="appt-doc-name" disabled></div>
+        <div class="form-field"><label>Date</label><input id="appt-date" type="date"></div>
+        <div class="form-field"><label>Time</label><input id="appt-time" type="time"></div>
+        <div class="form-field full"><label>Reason for visit</label><textarea id="appt-reason" rows="2" placeholder="e.g. general consult or refill check"></textarea></div>
+      </div>
+      <div style="margin-top:16px; display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn btn-ghost btn-sm" onclick="closeApptModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmBooking()">Confirm booking</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      const toastWrap = document.getElementById('toast-wrap');
+      if (toastWrap) {
+        const el = document.createElement('div');
+        el.className = 'toast err';
+        el.innerHTML = '🚨 Error: ' + message + ' in ' + (source ? source.split('/').pop() : 'inline') + ' line ' + lineno;
+        toastWrap.appendChild(el);
+      }
+      return false;
+    };
+  </script>
+
+  <!-- Entry Script Loader -->
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
