@@ -13,6 +13,7 @@ import { renderAISymptomChecker } from './components/AISymptomChecker.js';
 import { dbPlaceOrder, dbBookAppointment, dbMarkAttendance, auth, db } from './services/firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { scanAadhaarCard } from './services/gemini.js';
 
 // Setup state
 const state = {
@@ -734,63 +735,106 @@ window.attemptSignup = () => {
   const phone = document.getElementById('signup-phone').value.trim();
   const username = document.getElementById('signup-username').value.trim();
   const password = document.getElementById('signup-password').value;
+  
+  const fileInput = document.getElementById('signup-aadhaar');
+  const file = fileInput ? fileInput.files[0] : null;
 
   if (!name || !username || !password) {
     toast("Name, Username and Password are required", true);
     return;
   }
 
+  if (!file) {
+    toast("Please upload a clear photo of your Aadhaar card first.", true);
+    return;
+  }
+
   const statusEl = document.getElementById('signup-aadhaar-status');
   statusEl.style.display = "block";
-  statusEl.innerHTML = "<div class='attend-status-line'>🔍 Automatically verifying Aadhaar details...</div>";
+  statusEl.innerHTML = "<div class='attend-status-line'>🔍 Verifying Aadhaar details via Gemini Vision AI...</div>";
 
-  setTimeout(async () => {
-    statusEl.innerHTML = "<div class='attend-status-line ok'>✅ Aadhaar verification successful!</div>";
-    
-    if (auth && db) {
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, `${username}@swasthyanet.in`, password);
-        const uid = userCredential.user.uid;
-        const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-        
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const base64Data = reader.result;
+      const result = await scanAadhaarCard(base64Data, file.type);
+      
+      if (!result.isValid) {
+        statusEl.innerHTML = `<div class='attend-status-line err'>❌ Invalid Aadhaar: ${result.error || "Please upload a valid Aadhaar card photo."}</div>`;
+        toast("Aadhaar Verification Failed: " + (result.error || "Invalid Card"), true);
+        return;
+      }
+      
+      if (!result.isClear) {
+        statusEl.innerHTML = `<div class='attend-status-line err'>❌ Blurry Image: ${result.error || "Please upload a clear, readable image."}</div>`;
+        toast("Verification Failed: Image is too blurry or text is not readable.", true);
+        return;
+      }
+
+      // Check name match
+      const adharName = (result.name || "").replace(/\s+/g, ' ').trim().toLowerCase();
+      const inputName = name.replace(/\s+/g, ' ').trim().toLowerCase();
+
+      if (!adharName || (!adharName.includes(inputName) && !inputName.includes(adharName))) {
+        statusEl.innerHTML = `<div class='attend-status-line err'>❌ Name Mismatch: Aadhaar says "${result.name || 'Unknown'}" but you typed "${name}"</div>`;
+        toast(`Verification Failed: Name on Aadhaar ("${result.name || 'Unknown'}") does not match "${name}"`, true);
+        return;
+      }
+
+      statusEl.innerHTML = `<div class='attend-status-line ok'>✅ Aadhaar Verified! Name: ${result.name}, No: ${result.aadhaarNum}</div>`;
+      
+      // Proceed with registration
+      if (auth && db) {
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, `${username}@swasthyanet.in`, password);
+          const uid = userCredential.user.uid;
+          const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+          
+          const newUser = {
+            username: username,
+            role: 'patient',
+            name: name,
+            phone: phone,
+            facilityId: 1,
+            initials: initials
+          };
+          
+          await setDoc(doc(db, "users", uid), newUser);
+          toast("Account created and synced with Firebase!");
+          setTimeout(() => {
+            completeLogin({ ...newUser, uid });
+          }, 300);
+          return;
+        } catch (err) {
+          console.error("Firebase Sign up failed:", err);
+          toast("Firebase error: " + err.message, true);
+        }
+      }
+
+      // Local array fallback
+      setTimeout(() => {
         const newUser = {
           username: username,
+          password: password,
           role: 'patient',
           name: name,
           phone: phone,
           facilityId: 1,
-          initials: initials
+          initials: name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
         };
         
-        await setDoc(doc(db, "users", uid), newUser);
-        toast("Account created and synced with Firebase!");
-        setTimeout(() => {
-          completeLogin({ ...newUser, uid });
-        }, 300);
-        return;
-      } catch (err) {
-        console.error("Firebase Sign up failed:", err);
-        toast("Firebase error: " + err.message, true);
-      }
-    }
+        INITIAL_USERS.push(newUser);
+        toast(`Aadhaar Verified (${result.name}). Welcome to SwasthyaNet (Local Mode)!`);
+        completeLogin(newUser);
+      }, 800);
 
-    // Local array fallback
-    setTimeout(() => {
-      const newUser = {
-        username: username,
-        password: password,
-        role: 'patient',
-        name: name,
-        phone: phone,
-        facilityId: 1,
-        initials: name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
-      };
-      
-      INITIAL_USERS.push(newUser);
-      toast("Aadhaar Verified. Welcome to SwasthyaNet (Local Mode)!");
-      completeLogin(newUser);
-    }, 800);
-  }, 1200);
+    } catch (err) {
+      console.error("Aadhaar scanning exception:", err);
+      statusEl.innerHTML = `<div class='attend-status-line err'>❌ Verification crashed: ${err.message}</div>`;
+      toast("Error processing document: " + err.message, true);
+    }
+  };
+  reader.readAsDataURL(file);
 };
 
 window.attemptDoctorSignup = () => {
@@ -858,4 +902,20 @@ window.saveProfile = () => actions.saveProfile();
 // Bootstrap
 window.onload = () => {
   window.setLoginRole('patient');
+
+  // Set up Aadhaar upload preview listener
+  const signupAadhaar = document.getElementById('signup-aadhaar');
+  const signupAadhaarPreview = document.getElementById('signup-aadhaar-preview');
+  if (signupAadhaar && signupAadhaarPreview) {
+    signupAadhaar.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          signupAadhaarPreview.innerHTML = `<img src="${reader.result}" style="max-width:100%; border-radius:4px; max-height:180px; object-fit:contain;">`;
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+  }
 };
