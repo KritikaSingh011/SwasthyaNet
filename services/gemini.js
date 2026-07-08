@@ -1,4 +1,4 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyDWphMdDlErc_Zl6ZWVQZXThG_wppxdLnU";
 
 /**
  * Triage symptom check via Gemini API

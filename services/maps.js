@@ -1,4 +1,4 @@
-const CLOUD_API_KEY = import.meta.env.VITE_MAPS_API_KEY;
+const CLOUD_API_KEY = import.meta.env.VITE_MAPS_API_KEY || "AIzaSyDWphMdDlErc_Zl6ZWVQZXThG_wppxdLnU";
 
 let mapsLoaded = false;
 

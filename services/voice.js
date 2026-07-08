@@ -1,4 +1,4 @@
-const CLOUD_API_KEY = import.meta.env.VITE_CLOUD_API_KEY || import.meta.env.VITE_MAPS_API_KEY;
+const CLOUD_API_KEY = import.meta.env.VITE_CLOUD_API_KEY || import.meta.env.VITE_MAPS_API_KEY || "AIzaSyCvS-gaGVSQMx3avRLbuLiZXjroFH9uVPA";
 
 /**
  * Native SpeechRecognition Loader

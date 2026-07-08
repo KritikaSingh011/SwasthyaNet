@@ -19,15 +19,15 @@ import {
   where
 } from 'firebase/firestore';
 
-// Firebase configuration loaded from environment variables
+// Firebase configuration with env and hardcoded fallbacks
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDi-Q89ZoSrkwjYYXZlYqVMOb28iv0hPIg",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "project-6be3a.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "project-6be3a",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "project-6be3a.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "81895062343",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:81895062343:web:0d38c2af4762249060aa62",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-KQF1K3M1BY"
 };
 
 // Initialize Firebase (Try/catch to fallback in demo mode if keys are empty)
